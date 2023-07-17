@@ -89,7 +89,7 @@ defmodule Main do
       {:ok, %{posts: posts}} =
         Multi.new()
         |> Multi.run(:posts, fn repo, _changes ->
-          posts = from(Post) |> repo.all()
+          posts = from(Post) |> repo.all(caller: allowed_pid)
 
           {:ok, posts}
         end)
