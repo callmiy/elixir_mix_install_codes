@@ -47,13 +47,13 @@ end
 defmodule Main do
   import Ecto.Query, warn: false
 
-  def main do
+  defp setup do
+    _ = Repo.__adapter__().storage_down(Repo.config())
+    :ok = Repo.__adapter__().storage_up(Repo.config())
+
     children = [
       Repo
     ]
-
-    _ = Repo.__adapter__().storage_down(Repo.config())
-    :ok = Repo.__adapter__().storage_up(Repo.config())
 
     {:ok, _} = Supervisor.start_link(children, strategy: :one_for_one)
 
@@ -64,6 +64,10 @@ defmodule Main do
       all: true,
       log_migrations_sql: :debug
     )
+  end
+
+  def run do
+    setup()
 
     Repo.insert!(%Post{title: "Hello, World!"})
 
@@ -73,4 +77,4 @@ defmodule Main do
   end
 end
 
-Main.main()
+Main.run()
