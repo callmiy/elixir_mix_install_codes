@@ -93,7 +93,7 @@ defmodule Main do
 
           {:ok, posts}
         end)
-        |> Repo.transaction()
+        |> Repo.transaction(caller: allowed_pid)
 
       send(allowed_pid, {:posts, posts})
     end)
