@@ -84,7 +84,7 @@ defmodule Main do
     allowed_pid = self()
 
     spawn(fn ->
-      posts = from(Post) |> Repo.all()
+      posts = from(Post) |> Repo.all(caller: allowed_pid)
 
       send(allowed_pid, {:posts, posts})
     end)
