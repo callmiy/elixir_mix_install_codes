@@ -1,28 +1,18 @@
-Mix.install(
-  [
-    {:ecto_sql, "~> 3.10"},
-    {:postgrex, ">= 0.0.0"}
-  ],
-  config: [
-    {
-      :foo,
-      [
-        {
-          Repo,
-          [
-            database: "mix_install_examples",
-            stacktrace: true,
-            show_sensitive_data_on_connection_error: true,
-            ownership_timeout: 360_000_000,
-            timeout: :infinity,
-            pool_size: 10,
-            pool: Ecto.Adapters.SQL.Sandbox
-          ]
-        }
-      ]
-    }
-  ]
+Application.put_env(:foo, Repo,
+  database: "mix_install_examples",
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: true,
+  ownership_timeout: 360_000_000,
+  timeout: :infinity,
+  pool_size: 10,
+  pool: Ecto.Adapters.SQL.Sandbox
 )
+
+Mix.install([
+  {:ecto_sql, "~> 3.10"},
+  {:postgrex, ">= 0.0.0"},
+  {:cachex, "~> 3.4"}
+])
 
 defmodule Repo do
   use Ecto.Repo,
