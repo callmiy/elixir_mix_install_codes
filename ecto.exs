@@ -73,6 +73,8 @@ defmodule Main do
   end
 
   def run do
+    alias Ecto.Multi
+
     setup()
 
     Ecto.Adapters.SQL.Sandbox.mode(Repo, :manual)
@@ -84,7 +86,14 @@ defmodule Main do
     allowed_pid = self()
 
     spawn(fn ->
-      posts = from(Post) |> Repo.all(caller: allowed_pid)
+      {:ok, %{posts: posts}} =
+        Multi.new()
+        |> Multi.run(:posts, fn repo, _changes ->
+          posts = from(Post) |> repo.all()
+
+          {:ok, posts}
+        end)
+        |> Repo.transaction()
 
       send(allowed_pid, {:posts, posts})
     end)
