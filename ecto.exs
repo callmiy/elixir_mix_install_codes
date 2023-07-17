@@ -77,13 +77,25 @@ defmodule Main do
 
     Ecto.Adapters.SQL.Sandbox.mode(Repo, :manual)
 
-    _repo_owner_pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Repo, shared: true)
+    _repo_owner_pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Repo, shared: false)
 
     Repo.insert!(%Post{title: "Hello, World!"})
 
-    from(Post)
-    |> Repo.all()
-    |> IO.inspect()
+    allowed_pid = self()
+
+    spawn(fn ->
+      posts = from(Post) |> Repo.all()
+
+      send(allowed_pid, {:posts, posts})
+    end)
+
+    receive do
+      {:posts, posts} ->
+        IO.inspect(posts)
+    after
+      1_000 ->
+        :ok
+    end
   end
 end
 
