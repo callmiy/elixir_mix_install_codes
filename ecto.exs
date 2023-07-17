@@ -10,7 +10,13 @@ Mix.install(
         {
           Repo,
           [
-            database: "mix_install_examples"
+            database: "mix_install_examples",
+            stacktrace: true,
+            show_sensitive_data_on_connection_error: true,
+            ownership_timeout: 360_000_000,
+            timeout: :infinity,
+            pool_size: 10,
+            pool: Ecto.Adapters.SQL.Sandbox
           ]
         }
       ]
