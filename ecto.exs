@@ -1,12 +1,21 @@
-Mix.install([
-  {:ecto_sql, "~> 3.10"},
-  {:postgrex, ">= 0.0.0"}
-])
-
-Application.put_env(
-  :foo,
-  Repo,
-  database: "mix_install_examples"
+Mix.install(
+  [
+    {:ecto_sql, "~> 3.10"},
+    {:postgrex, ">= 0.0.0"}
+  ],
+  config: [
+    {
+      :foo,
+      [
+        {
+          Repo,
+          [
+            database: "mix_install_examples"
+          ]
+        }
+      ]
+    }
+  ]
 )
 
 defmodule Repo do
