@@ -77,7 +77,7 @@ defmodule Main do
 
     Ecto.Adapters.SQL.Sandbox.mode(Repo, :manual)
 
-    _repo_owner_pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Repo, shared: false)
+    _repo_owner_pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Repo, shared: true)
 
     Repo.insert!(%Post{title: "Hello, World!"})
 
