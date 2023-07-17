@@ -75,6 +75,8 @@ defmodule Main do
   def run do
     setup()
 
+    Ecto.Adapters.SQL.Sandbox.mode(Repo, :manual)
+
     Repo.insert!(%Post{title: "Hello, World!"})
 
     from(Post)
