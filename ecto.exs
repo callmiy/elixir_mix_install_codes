@@ -72,7 +72,7 @@ defmodule Main do
 
     allowed_pid = self()
 
-    _repo_opts = [caller: allowed_pid]
+    repo_opts = [caller: allowed_pid]
     _repo_opts = [caller: repo_owner_pid]
 
     Cachex.fetch(:foo_cache, :whatever, fn ->
@@ -80,7 +80,7 @@ defmodule Main do
 
       posts =
         from(Post)
-        |> Repo.all()
+        |> Repo.all(repo_opts)
 
       {:commit, posts}
     end)
