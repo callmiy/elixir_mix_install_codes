@@ -1,5 +1,8 @@
 Application.put_env(:foo, Repo,
   database: "mix_install_examples",
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   ownership_timeout: 360_000_000,
@@ -41,6 +44,7 @@ defmodule Post do
 end
 
 defmodule Main do
+  require Logger
   import Ecto.Query, warn: false
 
   defp setup do
@@ -48,6 +52,7 @@ defmodule Main do
     :ok = Repo.__adapter__().storage_up(Repo.config())
 
     children = [
+      {Cachex, name: :foo_cache},
       Repo
     ]
 
@@ -62,39 +67,69 @@ defmodule Main do
     )
   end
 
-  def run do
+  defp get(repo_owner_pid) do
     alias Ecto.Multi
 
+    allowed_pid = self()
+
+    _repo_opts = [caller: allowed_pid]
+    repo_opts = [caller: repo_owner_pid]
+
+    Multi.new()
+    |> Multi.run(:posts, fn _repo, _acc ->
+      posts =
+        Cachex.fetch(:foo_cache, :whatever, fn ->
+          debug_log(self(), "cachex process PID")
+
+          posts =
+            from(Post)
+            |> Repo.all(repo_opts)
+
+          {:commit, posts}
+        end)
+
+      {:ok, posts}
+    end)
+    |> Repo.transaction()
+    |> elem(1)
+    |> Map.get(:posts)
+    |> debug_log()
+  end
+
+  def run do
     setup()
 
     Ecto.Adapters.SQL.Sandbox.mode(Repo, :manual)
 
-    _repo_owner_pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Repo, shared: false)
+    repo_owner_pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Repo, shared: false)
 
     Repo.insert!(%Post{title: "Hello, World!"})
 
-    allowed_pid = self()
+    get(repo_owner_pid)
+  end
 
-    spawn(fn ->
-      {:ok, %{posts: posts}} =
-        Multi.new()
-        |> Multi.run(:posts, fn repo, _changes ->
-          posts = from(Post) |> repo.all(caller: allowed_pid)
+  def debug_log(args, label \\ "Degugging...") do
+    opts = Inspect.Opts.new([])
+    doc = Inspect.Algebra.group(Inspect.Algebra.to_doc(args, opts))
+    chardata = Inspect.Algebra.format(doc, opts.width)
 
-          {:ok, posts}
-        end)
-        |> Repo.transaction(caller: allowed_pid)
+    label =
+      if is_binary(label) do
+        label
+      else
+        inspect(label)
+      end
 
-      send(allowed_pid, {:posts, posts})
-    end)
+    Logger.info([
+      "\n\n\n",
+      "Start ===  #{label}  ===\n",
+      "-------------------------------------------------------------------------------\n",
+      chardata,
+      "\n-------------------------------------------------------------------------------",
+      "\nEnd ===  #{label}  ===\n\n\n"
+    ])
 
-    receive do
-      {:posts, posts} ->
-        IO.inspect(posts)
-    after
-      1_000 ->
-        :ok
-    end
+    args
   end
 end
 
