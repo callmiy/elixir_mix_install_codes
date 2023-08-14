@@ -73,26 +73,18 @@ defmodule Main do
     allowed_pid = self()
 
     _repo_opts = [caller: allowed_pid]
-    repo_opts = [caller: repo_owner_pid]
+    _repo_opts = [caller: repo_owner_pid]
 
-    Multi.new()
-    |> Multi.run(:posts, fn _repo, _acc ->
+    Cachex.fetch(:foo_cache, :whatever, fn ->
+      debug_log(self(), "cachex process PID")
+
       posts =
-        Cachex.fetch(:foo_cache, :whatever, fn ->
-          debug_log(self(), "cachex process PID")
+        from(Post)
+        |> Repo.all()
 
-          posts =
-            from(Post)
-            |> Repo.all(repo_opts)
-
-          {:commit, posts}
-        end)
-
-      {:ok, posts}
+      {:commit, posts}
     end)
-    |> Repo.transaction()
     |> elem(1)
-    |> Map.get(:posts)
     |> debug_log()
   end
 
