@@ -9,10 +9,7 @@ Application.put_env(:sample, SamplePhoenix.Endpoint,
 Mix.install([
   {:plug_cowboy, "~> 2.5"},
   {:jason, "~> 1.0"},
-  {:phoenix, "~> 1.7.0"},
-  config: [
-
-  ]
+  {:phoenix, "~> 1.7.0"}
 ])
 
 defmodule SamplePhoenix.SampleController do
